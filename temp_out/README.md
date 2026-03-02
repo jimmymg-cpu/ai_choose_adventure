@@ -1,1 +1,0 @@
-This folder contains the built output assets for the worker "ai-choose-adventure" generated at 2026-03-02T16:26:58.496Z.
