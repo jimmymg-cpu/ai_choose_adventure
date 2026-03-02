@@ -1,101 +1,196 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from 'react';
+import Reader from '@/components/Reader';
+import ChoiceSelector, { Choice } from '@/components/ChoiceSelector';
+import HUD from '@/components/HUD';
+import { useStoryStore } from '@/lib/store';
+import { BookOpen, Loader2 } from 'lucide-react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const {
+    sessionId,
+    title,
+    cast,
+    setting,
+    hiddenHealth,
+    storyHistory,
+    currentChapter,
+    globalPageOffset,
+    fontSize,
+    isGameOver,
+    initializeStory,
+    updateHealth,
+    addHistory,
+    incrementChapter,
+    addGlobalPages,
+    setGameOver
+  } = useStoryStore();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [currentNarrative, setCurrentNarrative] = useState('');
+  const [choices, setChoices] = useState<Choice[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initError, setInitError] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLastPage, setIsLastPage] = useState(false);
+
+  // If no session exists, we auto-generate the true E-Book Anthology start
+  useEffect(() => {
+    if (!sessionId && !isLoading && !initError) {
+      startNewAnthology();
+    } else if (sessionId && currentChapter > 0 && currentNarrative === '') {
+      // Rehydrated state
+      setCurrentNarrative(storyHistory[storyHistory.length - 1]);
+    }
+  }, [sessionId, currentChapter]);
+
+  const startNewAnthology = async () => {
+    setIsLoading(true);
+    setInitError(false);
+    try {
+      const res = await fetch('/api/story/init', { method: 'POST' });
+      if (!res.ok) throw new Error("Failed to init story");
+      const data = await res.json();
+
+      const newSessionId = crypto.randomUUID();
+      initializeStory(newSessionId, data.title, data.cast, data.setting, data.narrative);
+      setCurrentNarrative(data.narrative);
+      setChoices(data.choices);
+      // Ensure health and offset is reset just in case
+      useStoryStore.setState({ hiddenHealth: 80, isGameOver: false, globalPageOffset: 0 });
+    } catch (e) {
+      console.error(e);
+      setInitError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAction = async (actionText: string, healthImpact: number = 0) => {
+    setIsLoading(true);
+    setChoices([]);
+
+    if (healthImpact !== 0) {
+      updateHealth(healthImpact);
+    }
+
+    try {
+      const resp = await fetch('/api/story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cast,
+          setting,
+          hiddenHealth,
+          storyHistory,
+          actionTaken: actionText
+        })
+      });
+
+      if (!resp.ok) throw new Error("Failed to fetch story");
+
+      const data = await resp.json();
+
+      setCurrentNarrative(data.narrative);
+      setChoices(data.choices);
+      addHistory(data.narrative);
+      incrementChapter();
+      addGlobalPages(totalPages);
+
+      if (hiddenHealth <= 0 || currentChapter >= 12) {
+        setGameOver(true);
+      }
+
+    } catch (error) {
+      console.error(error);
+      setCurrentNarrative("The pages blur together. A profound distortion warps the text... Please try turning the page again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // True E-Book Loading Screen
+  if (!sessionId || isLoading && currentChapter === 0) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-1000">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 mx-auto mb-6 opacity-40 text-[var(--color-primary)] animate-spin" />
+          <h1 className="text-2xl font-serif tracking-widest uppercase opacity-60 animate-pulse">Writing a new story...</h1>
+          {initError && (
+            <div className="mt-8">
+              <p className="text-red-500 font-sans mb-4">The author hit writer's block. Please try again.</p>
+              <button onClick={startNewAnthology} className="px-6 py-2 border rounded border-[var(--color-primary)] opacity-70 hover:opacity-100">Retry</button>
+            </div>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    );
+  }
+
+  // displayPage is the monotonic global page count + current local chunk page
+  const displayPage = globalPageOffset + currentPage;
+
+  // True E-Book Reading Screen
+  return (
+    <main className="min-h-screen flex flex-col p-4 sm:p-8 md:p-16 lg:p-24 transition-colors duration-1000 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+      <HUD title={title} chapter={currentChapter} displayPage={displayPage} />
+
+      <div className="flex-1 max-w-2xl mx-auto w-full pt-8">
+        <header className="mb-16 text-center border-b border-[var(--color-primary)] border-opacity-20 pb-8 relative">
+          <h1
+            className="font-serif font-bold text-[var(--color-text-primary)] tracking-tight mb-4 leading-tight transition-all duration-300"
+            style={{ fontSize: `${Math.max(30, fontSize * 2)}px`, lineHeight: 1.2 }}
+          >
+            {title}
+          </h1>
+        </header>
+
+        {isLoading ? (
+          <div className="flex flex-col justify-center items-center py-32 space-y-4">
+            <Loader2 className="w-8 h-8 opacity-40 text-[var(--color-primary)] animate-spin" />
+            <p className="font-sans text-xs uppercase tracking-widest opacity-50">Generating Narrative...</p>
+          </div>
+        ) : (
+          <div className="pb-64 relative">
+            <Reader
+              content={currentNarrative}
+              fontSize={fontSize}
+              onPageChange={(c, t) => { setCurrentPage(c); setTotalPages(t); }}
+              onLastPage={(val) => { console.log('isLastPage event:', val); setIsLastPage(val); }}
+            />
+
+            {isGameOver ? (
+              <div className="mt-20 text-center font-sans">
+                <p className="italic font-serif text-xl mb-12 opacity-80">
+                  {hiddenHealth <= 0 ? "The pages tear away into absolute darkness." : "The final chapter concludes in silent victory."}
+                </p>
+                <div className="w-16 h-px bg-[var(--color-primary)] opacity-30 mx-auto mb-12"></div>
+                <button
+                  onClick={() => {
+                    useStoryStore.getState().resetAdventure();
+                    window.location.reload();
+                  }}
+                  className="px-8 py-3 tracking-widest uppercase text-sm border border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-bg-primary)] transition-colors duration-300"
+                >
+                  Close Book & Start Anew
+                </button>
+              </div>
+            ) : (
+              <div className={`mt-16 relative z-50 transition-opacity duration-700 ${isLastPage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                {/* Decorative divider before choices */}
+                <div className="w-8 h-px bg-[var(--color-primary)] opacity-30 mx-auto mb-16"></div>
+                <ChoiceSelector
+                  choices={choices}
+                  onSelect={(choice) => handleAction(choice.text, choice.healthImpact)}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
