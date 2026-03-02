@@ -1,8 +1,9 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 
 const ai = new GoogleGenAI({});
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(req: Request) {
   console.log("Init API Route Hit!");
   try {

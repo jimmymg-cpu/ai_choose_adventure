@@ -35,8 +35,8 @@ export default function Reader({ content, paragraphsPerPage = 5, fontSize = 18, 
             onLastPage?.(currentPage === totalPages - 1);
         } else {
             onPageChange?.(1, 1);
-            onLastPage?.(true);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, totalPages]);
 
 
@@ -62,6 +62,7 @@ export default function Reader({ content, paragraphsPerPage = 5, fontSize = 18, 
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, totalPages]);
 
     const handlers = useSwipeable({

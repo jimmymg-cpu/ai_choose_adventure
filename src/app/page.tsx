@@ -44,6 +44,7 @@ export default function Home() {
       // Rehydrated state
       setCurrentNarrative(storyHistory[storyHistory.length - 1]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, currentChapter]);
 
   const startNewAnthology = async () => {

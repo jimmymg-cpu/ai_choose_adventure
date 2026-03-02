@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(req: Request) {
     try {
         const { id, state } = await req.json();
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
         // or passed via Next Request `req.cf` ?
         // Actually, Next.js requires specific edge runtime setup for bindings.
         // Assuming process.env.DB is typed as D1Database in Cloudflare Pages environment
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const db = process.env.DB as any;
 
         if (!db) {
@@ -34,6 +36,7 @@ export async function POST(req: Request) {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
@@ -43,6 +46,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Missing id" }, { status: 400 });
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const db = process.env.DB as any;
         if (!db) {
             return NextResponse.json({ error: "D1 DB binding not ready" }, { status: 503 });
