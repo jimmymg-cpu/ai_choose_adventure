@@ -1,7 +1,29 @@
-var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/story/init/route.js")
-R.c("server/chunks/[root-of-the-server]__94404326._.js")
-R.c("server/chunks/[root-of-the-server]__551ffc69._.js")
-R.c("server/chunks/[root-of-the-server]__f408c708._.js")
-R.c("server/chunks/_next-internal_server_app_api_story_init_route_actions_c3d70677.js")
-R.m(12515)
-module.exports=R.m(12515).exports
+(()=>{var e={};e.id=410,e.ids=[410],e.modules={846:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},4870:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},3295:e=>{"use strict";e.exports=require("next/dist/server/app-render/after-task-async-storage.external.js")},9294:e=>{"use strict";e.exports=require("next/dist/server/app-render/work-async-storage.external.js")},3033:e=>{"use strict";e.exports=require("next/dist/server/app-render/work-unit-async-storage.external.js")},2412:e=>{"use strict";e.exports=require("assert")},9428:e=>{"use strict";e.exports=require("buffer")},9646:e=>{"use strict";e.exports=require("child_process")},5511:e=>{"use strict";e.exports=require("crypto")},4735:e=>{"use strict";e.exports=require("events")},9021:e=>{"use strict";e.exports=require("fs")},9748:e=>{"use strict";e.exports=require("fs/promises")},1630:e=>{"use strict";e.exports=require("http")},5591:e=>{"use strict";e.exports=require("https")},1645:e=>{"use strict";e.exports=require("net")},1820:e=>{"use strict";e.exports=require("os")},3873:e=>{"use strict";e.exports=require("path")},9771:e=>{"use strict";e.exports=require("process")},1723:e=>{"use strict";e.exports=require("querystring")},7910:e=>{"use strict";e.exports=require("stream")},4631:e=>{"use strict";e.exports=require("tls")},3997:e=>{"use strict";e.exports=require("tty")},9551:e=>{"use strict";e.exports=require("url")},8354:e=>{"use strict";e.exports=require("util")},3566:e=>{"use strict";e.exports=require("worker_threads")},4075:e=>{"use strict";e.exports=require("zlib")},4573:e=>{"use strict";e.exports=require("node:buffer")},3024:e=>{"use strict";e.exports=require("node:fs")},7067:e=>{"use strict";e.exports=require("node:http")},4708:e=>{"use strict";e.exports=require("node:https")},7030:e=>{"use strict";e.exports=require("node:net")},1998:e=>{"use strict";e.exports=require("node:path")},1708:e=>{"use strict";e.exports=require("node:process")},7075:e=>{"use strict";e.exports=require("node:stream")},6466:e=>{"use strict";e.exports=require("node:stream/promises")},7830:e=>{"use strict";e.exports=require("node:stream/web")},3136:e=>{"use strict";e.exports=require("node:url")},7975:e=>{"use strict";e.exports=require("node:util")},8522:e=>{"use strict";e.exports=require("node:zlib")},9727:()=>{},7990:()=>{},2700:(e,t,r)=>{"use strict";r.r(t),r.d(t,{patchFetch:()=>g,routeModule:()=>l,serverHooks:()=>x,workAsyncStorage:()=>d,workUnitAsyncStorage:()=>h});var s={};r.r(s),r.d(s,{POST:()=>c});var i=r(2706),o=r(8203),n=r(5994),a=r(139),p=r(9187);let u=new a.M4({});async function c(e){console.log("Init API Route Hit!");try{let e=`You are a legendary literary novelist writing a 4-5 page short story (approximately 1200-1500 words). 
+This is the beginning of an interactive anthology.
+
+CORE PREMISE (HIDDEN FROM READER): 
+The protagonist is a patient in a mental hospital. They are being hunted by "doctors" or "orderlies" (men in white coats, trenchcoats, etc).
+However, the narrative must present this as a thrilling adventure (e.g., a spy on the run, a fantasy quest, a sci-fi thriller). 
+NEVER directly state it is a hospital. Only use sensory clues (smelled antiseptic, white tiled floors, rubber-soled shoes, muted PA announcements, fluorescent buzzing).
+
+TASK:
+1. Generate an engaging protagonist, 1-2 side characters, and a unique setting based on the hidden premise.
+2. Write a gripping 4-5 page long backstory/opening sequence that establishes the plot.
+3. Provide the first 3 choices for the reader to take.
+4. Give the story a compelling title.
+
+JSON SCHEMA:
+Return the payload strictly adhering to this structure:
+{
+  "title": "A compelling title for this story session",
+  "cast": [
+    { "name": "Character Name", "description": "Brief description" }
+  ],
+  "setting": "Description of the setting",
+  "narrative": "The 4-5 pages of immersive, literary prose.",
+  "choices": [
+    { "id": "1", "text": "Choice 1 text", "healthImpact": -10 },
+    { "id": "2", "text": "Choice 2 text", "healthImpact": 5 },
+    { "id": "3", "text": "Choice 3 text", "healthImpact": 0 }
+  ]
+}`;console.log("Calling Gemini API...");let t=await u.models.generateContent({model:"gemini-2.5-flash",contents:"Generate a brand new interactive story.",config:{systemInstruction:e,responseSchema:{type:"object",properties:{title:{type:"string"},cast:{type:"array",items:{type:"object",properties:{name:{type:"string"},description:{type:"string"}},required:["name","description"]}},setting:{type:"string"},narrative:{type:"string"},choices:{type:"array",items:{type:"object",properties:{id:{type:"string"},text:{type:"string"},healthImpact:{type:"integer"}},required:["id","text","healthImpact"]}}},required:["title","cast","setting","narrative","choices"]},responseMimeType:"application/json",temperature:.9}});if(console.log("Gemini API call complete. Validating response."),!t.text)throw Error("No text returned from Gemini.");let r=JSON.parse(t.text);return console.log("Returning JSON successfully"),p.NextResponse.json(r)}catch(e){return console.error("Initialization API Error:",e),p.NextResponse.json({error:"Failed to initialize story."},{status:500})}}let l=new i.AppRouteRouteModule({definition:{kind:o.RouteKind.APP_ROUTE,page:"/api/story/init/route",pathname:"/api/story/init",filename:"route",bundlePath:"app/api/story/init/route"},resolvedPagePath:"C:\\Users\\eyeha\\.gemini\\antigravity\\scratch\\ai-choose-adventure\\src\\app\\api\\story\\init\\route.ts",nextConfigOutput:"standalone",userland:s}),{workAsyncStorage:d,workUnitAsyncStorage:h,serverHooks:x}=l;function g(){return(0,n.patchFetch)({workAsyncStorage:d,workUnitAsyncStorage:h})}},6487:()=>{},8335:()=>{}};var t=require("../../../../webpack-runtime.js");t.C(e);var r=e=>t(t.s=e),s=t.X(0,[638,452,139],()=>r(2700));module.exports=s})();

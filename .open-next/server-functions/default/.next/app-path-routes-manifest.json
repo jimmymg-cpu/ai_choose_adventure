@@ -1,9 +1,1 @@
-{
-  "/_global-error/page": "/_global-error",
-  "/_not-found/page": "/_not-found",
-  "/api/bookmarks/route": "/api/bookmarks",
-  "/api/story/init/route": "/api/story/init",
-  "/api/story/route": "/api/story",
-  "/favicon.ico/route": "/favicon.ico",
-  "/page": "/"
-}
+{"/_not-found/page":"/_not-found","/favicon.ico/route":"/favicon.ico","/api/story/init/route":"/api/story/init","/api/story/route":"/api/story","/api/bookmarks/route":"/api/bookmarks","/page":"/"}
